@@ -1,0 +1,212 @@
+<?php
+
+// Define constants
+define('ALOHA_PATH', 'sites/all/libraries/aloha');
+
+/**
+ * Implements hook_permission().
+ */
+function aloha_permission() {
+  return array(
+    'use aloha' => array(
+      'title' => t('Use the aloha editor'),
+      'description' => t('Use the aloha editor to edit node content.')
+    ));
+}
+
+
+/**
+ * Implements hook_block_view().
+ */
+function aloha_block_view_alter(&$data, $block) {
+  // Check access
+  if ($block->module == 'block' && user_access('use aloha') && user_access('administer blocks')) {
+    if (_aloha_include_files()) {
+      $key = $block->module . '-' . $block->delta;
+      // Add a wrapper
+      $prefix = '<div id="aloha-container-'. $key . '" class="aloha-editor">';
+      $suffix = '</div>';
+      $data['content'] = $prefix . $data['content'] . $suffix;
+      $region_data = array(
+        'type' => 'block',
+        'delta' => $block->delta,
+      );
+      _aloha_add_region_to_js($key, $region_data);
+    }
+  }
+}
+
+
+function aloha_field_attach_view_alter(&$output, $context) {
+  foreach ($output as $fieldname => $field) {
+    if (isset($field['#items']) && is_array($field['#items'])) {
+      if (field_access('edit', $field['#field_name'], $field['#entity_type'], $field['#object'])) {
+        foreach ($field['#items'] as $delta => $item) {
+          switch ($field['#field_type']) {
+            case 'text':
+            case 'text_with_summary':
+              $key = $field['#field_name'] . '-' . $field['#object']->vid . '-' . $delta;
+              $output[$fieldname][$delta]['#prefix'] = '<span id="aloha-container-' . $key . '">';
+              $output[$fieldname][$delta]['#suffix'] = '</span>';
+              $data = array(
+                'type' => 'field',
+                'nid' => $field['#object']->nid,
+                'revision_id' => $field['#object']->vid,
+                'field_name' => $field['#field_name'],
+                'delta' => $delta,
+                'lang' => $field['#object']->language,
+                'entity_type' => $field['#entity_type'],
+              );
+              _aloha_add_region_to_js($key, $data);
+              break;
+          }
+        }
+      }
+    }
+  }
+}
+
+
+/**
+ * Add data about an aloha enabled region to the inline js for a page.
+ *
+ * @param $key
+ * @param $data
+ */
+function _aloha_add_region_to_js($key, $data) {
+  $setting = array('aloha' => array('regions' => array($key => $data)));
+  drupal_add_js($setting, 'setting');
+}
+
+
+/**
+ * Implements hook_menu().
+ *
+ * These are used for ajax callbacks to save the data being edited
+ */
+function aloha_menu() {
+  $items['aloha/block/save'] = array(
+    'page callback' => 'aloha_save_block',
+    'access arguments' => array('administer blocks'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['aloha/field/save'] = array(
+    'page callback' => 'aloha_save_field',
+    'access callback' => 'aloha_access_field',
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+
+/**
+ * Helper function to add JS files and setings
+ */
+function _aloha_include_files() {
+  $included = &drupal_static(__FUNCTION__);
+  if (!$included) {
+    $path = ALOHA_PATH;
+    if (!file_exists(libraries_get_path('aloha') . '/lib/aloha.js')) {
+      // Display a message when aloha is not found
+      drupal_set_message(t('You need to download the !aloha and extract the entire contents of the archive into the %path folder of your server.', array('!aloha' => l(t('Aloha Editor'), 'http://www.aloha-editor.org/'), '%path' => $path)), 'warning', FALSE);
+      return FALSE;
+    }
+    // Because Drupal doesn't allow to setup custom attributes
+    // for js or css includes we have to use drupal_add_html_head()
+    global $base_url;
+    // Create the markup to be added
+    // TODO: Include more plugins
+    // TODO: Give user possibility to choose which plugins to load
+    $aloha_to_html_head = array(
+      '#type' => 'markup',
+      '#markup' => '<script type="text/javascript" src="'.$base_url.'/'.libraries_get_path('aloha').'/lib/aloha.js" data-aloha-plugins="common/format,common/table,common/list,common/link,common/undo,common/contenthandler"></script>'.PHP_EOL.'<link rel="stylesheet" href="'.$base_url.'/'.libraries_get_path('aloha').'/css/aloha.css" id="aloha-style-include" type="text/css">'.PHP_EOL,
+    );
+
+    drupal_add_html_head($aloha_to_html_head, 'aloha');
+    drupal_add_css($path . '/aloha/css/aloha.css');
+
+    // Module files
+    drupal_add_js(drupal_get_path('module', 'aloha') . '/aloha.js');
+    drupal_add_css(drupal_get_path('module', 'aloha') . '/aloha.css');
+
+    // Aloha Settings to be transferred to Aloha library
+    // TODO: Add settings for all plugins
+    $settings = array(
+      'logLevels' => array(
+        'error' => TRUE,
+        'warn' => TRUE,
+        'info' => FALSE,
+        'debug' => FALSE,
+      ),
+      'errorhandling' => FALSE,
+      'ribbon' => FALSE,
+      'floatingmenu' => array('width' => '630'),
+      'plugins' => array(
+        'link' => array(
+          'targetregex' => "^(?!.*" . $base_url . ").*",
+          'target' => '_blank',
+          'cssclassregex' => "^(?!.*" . $base_url . ").*",
+          'cssclass' => 'external',
+        ),
+        'table' => array(
+          'config' => array('table'),
+        ),
+      ),
+    );
+    drupal_add_js(array('aloha' => array('alohaSettings' => $settings, 'saveBase' => $base_url)), 'setting');
+    $included = TRUE;
+  }
+  return TRUE;
+}
+
+
+/**
+ * AJaX Callback for saving block
+ *
+ */
+function aloha_save_block() {
+  // Prevent direct access without POST
+  if (isset($_POST['html'])) {
+    db_update('block_custom')
+        ->fields(array('body' => $_POST['html']))
+        ->condition('bid', $_POST['delta'])
+        ->execute();
+    $saved = array('title' => 'Block', 'type' => 'block', 'status' => 'saved', 'delta' => $_POST['delta']);
+    return drupal_json_output($saved);
+  }
+  else {
+    drupal_json_output(FALSE);
+  }
+}
+
+
+/**
+ * AJaX Callback for saving field
+ *
+ */
+function aloha_save_field() {
+  // Prevent direct access without POST
+  if (isset($_POST['html'])) {
+    $node = node_load(check_plain($_POST['nid']));
+    if (!aloha_access_field($node)) {
+      return drupal_json_output(FALSE);
+    }
+    $node->{$_POST['field_name']}[$_POST['lang']][$_POST['delta']]['value'] = $_POST['html'];
+    node_save($node);
+    $saved = array('title' => 'Field', 'type' => 'field', 'status' => 'saved', 'delta' => $_POST['delta']);
+    return drupal_json_output($saved);
+  }
+  else {
+    drupal_json_output(FALSE);
+  }
+}
+
+/**
+ * Access callback for updating field
+ *
+ * @param $entity
+ */
+function aloha_access_field($entity = NULL) {
+  return field_access('edit', check_plain($_POST['field_name']), 'node', $entity);
+}
+

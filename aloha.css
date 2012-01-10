@@ -1,0 +1,11 @@
+/**
+ * Aloha-related style
+ */
+.aloha-edit * {
+  background: #FFFFCC;
+}
+
+.aloha-status {
+  background: #CCFFCC;
+  padding: 2px;
+}
