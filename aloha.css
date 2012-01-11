@@ -1,6 +1,7 @@
 /**
  * Aloha-related style
  */
+.aloha-edit,
 .aloha-edit * {
   background: #FFFFCC;
 }
