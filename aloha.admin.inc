@@ -12,7 +12,7 @@ function aloha_admin() {
   	foreach($categories as $category) {
   		foreach(array_diff(scandir($dir.'/'.$category),array('.','..')) as $folder) {
   			if(is_dir($dir.'/'.$category.'/'.$folder)) {
-  				$options[$folder]=ucfirst($folder);
+  				$options[$category.'/'.$folder]=ucfirst($folder);
   			}
   		}
   	}
@@ -31,6 +31,24 @@ function aloha_admin() {
   }
   
   $form = system_settings_form($form);
+  $form['#submit'][] = 'aloha_admin_submit';
 
   return $form;
+}
+
+/**
+ * Clear JS cache only on Save submit
+ *
+ * @param <type> $form
+ * @param <type> $form_state
+ */
+function aloha_admin_submit($form, &$form_state) {
+
+  // Check if submit button was pressed and rebuild the functionality.
+  // We must use "clicked_button" becaus values['op'] was unset by
+  // system_settings_form_submit.
+  $op = isset($form_state['clicked_button']['#value']) ? $form_state['clicked_button']['#value'] : '';
+  if ($op == t('Save configuration')) {
+    drupal_clear_js_cache();
+  }
 }

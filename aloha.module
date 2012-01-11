@@ -130,12 +130,24 @@ function _aloha_include_files() {
     // Because Drupal doesn't allow to setup custom attributes
     // for js or css includes we have to use drupal_add_html_head()
     global $base_url;
+    $plugins_list = variable_get('aloha_plugins', array());
+    $plugins_activated = 'data-aloha-plugins="';
+    if($plugins_list) {
+    	foreach($plugins_list as $key => $plugin) {
+    		if($plugin == $key && !$plugin=='0') {
+    			$plugins_activated .= $plugin . ',';
+    		}
+    	}
+    }
+    if(substr($plugins_activated, -1)==',') {
+    	$plugins_activated = substr($plugins_activated, 0, -1);
+    }
+    $plugins_activated .= '"';
+    
     // Create the markup to be added
-    // TODO: Include more plugins
-    // TODO: Give user possibility to choose which plugins to load
     $aloha_to_html_head = array(
       '#type' => 'markup',
-      '#markup' => '<script type="text/javascript" src="'.$base_url.'/'.libraries_get_path('aloha').'/lib/aloha.js" data-aloha-plugins="common/format,common/table,common/list,common/link,common/undo,common/contenthandler"></script>'.PHP_EOL.'<link rel="stylesheet" href="'.$base_url.'/'.libraries_get_path('aloha').'/css/aloha.css" id="aloha-style-include" type="text/css">'.PHP_EOL,
+      '#markup' => '<script type="text/javascript" src="'.$base_url.'/'.libraries_get_path('aloha').'/lib/aloha.js" '.$plugins_activated.'></script>'.PHP_EOL.'<link rel="stylesheet" href="'.$base_url.'/'.libraries_get_path('aloha').'/css/aloha.css" id="aloha-style-include" type="text/css">'.PHP_EOL,
     );
 
     drupal_add_html_head($aloha_to_html_head, 'aloha');
