@@ -191,12 +191,12 @@ function _aloha_include_files() {
  *
  */
 function aloha_save_block() {
-    db_update('block_custom')
-        ->fields(array('body' => $_POST['html']))
-        ->condition('bid', $_POST['delta'])
-        ->execute();
-    $saved = array('title' => 'Block', 'type' => 'block', 'status' => 'saved', 'delta' => $_POST['delta']);
-    return drupal_json_output($saved);
+  db_update('block_custom')
+      ->fields(array('body' => $_POST['html']))
+      ->condition('bid', $_POST['delta'])
+      ->execute();
+  $saved = array('title' => 'Block', 'type' => 'block', 'status' => 'saved', 'delta' => $_POST['delta']);
+  return drupal_json_output($saved);
 }
 
 
@@ -205,11 +205,11 @@ function aloha_save_block() {
  *
  */
 function aloha_save_field() {
-    $node = node_load(check_plain($_POST['nid']));
-    $node->{$_POST['field_name']}[$_POST['lang']][$_POST['delta']]['value'] = $_POST['html'];
-    node_save($node);
-    $saved = array('title' => 'Field', 'type' => 'field', 'status' => 'saved', 'delta' => $_POST['delta']);
-    return drupal_json_output($saved);
+  $node = node_load(check_plain($_POST['nid']));
+  $node->{$_POST['field_name']}[$_POST['lang']][$_POST['delta']]['value'] = $_POST['html'];
+  node_save($node);
+  $saved = array('title' => 'Field', 'type' => 'field', 'status' => 'saved', 'delta' => $_POST['delta']);
+  return drupal_json_output($saved);
 }
 
 /**
