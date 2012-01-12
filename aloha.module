@@ -107,7 +107,6 @@ function aloha_menu() {
   $items['aloha/field/save'] = array(
     'page callback' => 'aloha_save_field',
     'access callback' => 'aloha_access_field',
-		'access arguments' => array('use aloha'),
     'type' => MENU_CALLBACK,
   );
   return $items;
