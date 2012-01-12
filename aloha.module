@@ -214,9 +214,6 @@ function aloha_save_field() {
   // Prevent direct access without POST
   if (isset($_POST['html'])) {
     $node = node_load(check_plain($_POST['nid']));
-    if (!aloha_access_field()) {
-      return drupal_json_output(FALSE);
-    }
     $node->{$_POST['field_name']}[$_POST['lang']][$_POST['delta']]['value'] = $_POST['html'];
     node_save($node);
     $saved = array('title' => 'Field', 'type' => 'field', 'status' => 'saved', 'delta' => $_POST['delta']);
