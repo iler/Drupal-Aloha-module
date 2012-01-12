@@ -44,7 +44,7 @@ function aloha_field_attach_view_alter(&$output, $context) {
 	has_krumo();
 	krumo($field);
     if (isset($field['#items']) && is_array($field['#items'])) {
-			if (field_access('edit', field_info_field($field['#field_name']), $field['#entity_type'], $field['#object']) && node_access('update', $field['#object']) && && user_access('use aloha')) {
+			if (field_access('edit', field_info_field($field['#field_name']), $field['#entity_type'], $field['#object']) && node_access('update', $field['#object']) && user_access('use aloha')) {
         _aloha_include_files();
         foreach ($field['#items'] as $delta => $item) {
           switch ($field['#field_type']) {
