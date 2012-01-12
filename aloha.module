@@ -218,8 +218,9 @@ function aloha_save_field() {
  * @param $entity
  */
 function aloha_access_field() {
-  if(field_access('edit', check_plain($_POST['field_name']), 'node', $entity)
-      && node_access('update', node_load(check_plain($_POST['nid'])))
+  $node = node_load(check_plain($_POST['nid']));
+  if(field_access('edit', check_plain($_POST['field_name']), 'node', $node)
+      && node_access('update', $node)
       && isset($_POST['html'])) {
 		return TRUE;
 	}
