@@ -18,7 +18,6 @@ function aloha_permission() {
     ));
 }
 
-
 /**
  * Implements hook_block_view().
  */
@@ -39,7 +38,6 @@ function aloha_block_view_alter(&$data, $block) {
     }
   }
 }
-
 
 function aloha_field_attach_view_alter(&$output, $context) {
   foreach ($output as $fieldname => $field) {

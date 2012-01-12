@@ -19,10 +19,17 @@ function aloha_admin() {
   }
   
 	$form['aloha_plugins'] = array(
-		'#type' => 'checkboxes',
-		'#options' => $options,
+		'#type' => 'fieldset',
 		'#title' => t('Plugins'),
 		'#description' => t('Select plugins that you want to use with Aloha Editor.'),
+		'#collapsible' => TRUE,
+		'#collapsed' => TRUE,
+		'#tree' => TRUE,
+	);
+	
+	$form['aloha_plugins']['list'] = array(
+		'#type' => 'checkboxes',
+		'#options' => $options,
 		'#default_value' => variable_get('aloha_plugins', array()),
 	);
   
@@ -34,6 +41,13 @@ function aloha_admin() {
   $form['#submit'][] = 'aloha_admin_submit';
 
   return $form;
+}
+
+/**
+ * Layout for the plugins list.
+ */
+function theme_aloha_plugins_settings($variables) {
+	
 }
 
 /**
