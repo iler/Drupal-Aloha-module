@@ -101,12 +101,13 @@ function aloha_menu() {
   );
   $items['aloha/block/save'] = array(
     'page callback' => 'aloha_save_block',
-    'access arguments' => array('administer blocks'),
+    'access arguments' => array('administer blocks', 'use aloha'),
     'type' => MENU_CALLBACK,
   );
   $items['aloha/field/save'] = array(
     'page callback' => 'aloha_save_field',
     'access callback' => 'aloha_access_field',
+		'access arguments' => array('use aloha'),
     'type' => MENU_CALLBACK,
   );
   return $items;
@@ -233,6 +234,11 @@ function aloha_save_field() {
  * @param $entity
  */
 function aloha_access_field($entity = NULL) {
-  return field_access('edit', check_plain($_POST['field_name']), 'node', $entity);
+  if(field_access('edit', check_plain($_POST['field_name']), 'node', $entity) && node_access('update', node_load(check_plain($_POST['nid'])))) {
+		return TRUE;
+	}
+	else {
+		return FALSE;
+	}
 }
 
