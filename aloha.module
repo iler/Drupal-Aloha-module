@@ -191,18 +191,12 @@ function _aloha_include_files() {
  *
  */
 function aloha_save_block() {
-  // Prevent direct access without POST
-  if (isset($_POST['html'])) {
     db_update('block_custom')
         ->fields(array('body' => $_POST['html']))
         ->condition('bid', $_POST['delta'])
         ->execute();
     $saved = array('title' => 'Block', 'type' => 'block', 'status' => 'saved', 'delta' => $_POST['delta']);
     return drupal_json_output($saved);
-  }
-  else {
-    drupal_json_output(FALSE);
-  }
 }
 
 
@@ -211,17 +205,11 @@ function aloha_save_block() {
  *
  */
 function aloha_save_field() {
-  // Prevent direct access without POST
-  if (isset($_POST['html'])) {
     $node = node_load(check_plain($_POST['nid']));
     $node->{$_POST['field_name']}[$_POST['lang']][$_POST['delta']]['value'] = $_POST['html'];
     node_save($node);
     $saved = array('title' => 'Field', 'type' => 'field', 'status' => 'saved', 'delta' => $_POST['delta']);
     return drupal_json_output($saved);
-  }
-  else {
-    drupal_json_output(FALSE);
-  }
 }
 
 /**
@@ -230,7 +218,9 @@ function aloha_save_field() {
  * @param $entity
  */
 function aloha_access_field() {
-  if(field_access('edit', check_plain($_POST['field_name']), 'node', $entity) && node_access('update', node_load(check_plain($_POST['nid'])))) {
+  if(field_access('edit', check_plain($_POST['field_name']), 'node', $entity)
+      && node_access('update', node_load(check_plain($_POST['nid'])))
+      && isset($_POST['html'])) {
 		return TRUE;
 	}
 	else {
